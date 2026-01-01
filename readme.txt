@@ -1,8 +1,3 @@
-Please create a widget clock for windows11 in Z:\antigravity\widget\, requirements in readme.txt
-
-
-- always use Z:\antigravity\venv\ if need python
-
 0) white clock, 3 hands need a bit dark background such that it can be seen on white windows wallpaper.
 1) great "liquid glass" looking, clock need 12 hour 刻度.
 2) small (widget size: 200x200) but clear transparent (white) circular clock on 4K monitor, default on the top-right when start, it can drag by user anywhere on 4K screen, it need remember its previous position on screen and display on the same position in next startup.
@@ -20,6 +15,5 @@ SnapEdges=1
 KeepOnScreen=1
 AlwaysOnTop=0
 7) final version to be built in a .exe (no need install) file for win11.
-8) use this readme.txt and prepare for deploy to my github....
 
 
