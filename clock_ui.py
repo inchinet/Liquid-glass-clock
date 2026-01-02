@@ -9,10 +9,17 @@ from PyQt6.QtGui import QPainter, QColor, QPen, QBrush, QFont, QPolygon, QIcon, 
 from lunarcalendar import Converter, Solar
 
 
+
 if getattr(sys, 'frozen', False):
+    # If the application is run as a bundle, the PyInstaller bootloader
+    # extends the sys module by a flag frozen=True and sets the app 
+    # path into variable _MEIPASS.
+    # Config should be external (next to exe), Assets internal (in temp bundle dir)
     application_path = os.path.dirname(sys.executable)
+    resource_path = sys._MEIPASS
 else:
     application_path = os.path.dirname(os.path.abspath(__file__))
+    resource_path = application_path
 
 CONFIG_FILE = os.path.join(application_path, 'config.ini')
 
@@ -88,6 +95,11 @@ class ClockWidget(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.resize(200, 200) # Updated size as requested
         self.setWindowTitle('Liquid Clock')
+
+        # Set Window Icon
+        icon_path = os.path.join(resource_path, 'clock.ico')
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
         
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -155,7 +167,7 @@ class ClockWidget(QWidget):
         # Shift up slightly to fit 3 lines (Date, Time, Lunar)
         # Center Y is 150. Hands extend down to ~170 (second hand 20px). 
         # Start box at 180 to be safe.
-        box_top_y = center.y() + 30
+        box_top_y = center.y() + 5
         painter.drawRoundedRect(center.x() - rect_width//2, box_top_y, rect_width, rect_height, 15, 15)
 
         # Text

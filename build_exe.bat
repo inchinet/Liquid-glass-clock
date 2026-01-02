@@ -1,2 +1,2 @@
 
-Z:\antigravity\venv\Scripts\python.exe -m PyInstaller --noconfirm --onefile --windowed --name "LiquidGlassClock" main.py
+Z:\antigravity\venv\Scripts\python.exe -m PyInstaller --clean --noconfirm LiquidGlassClock.spec

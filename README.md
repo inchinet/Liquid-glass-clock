@@ -2,7 +2,7 @@
 
 A sleek, transparent "Liquid Glass" style clock widget for Windows 11.
 
-![Liquid Glass Clock](https://via.placeholder.com/200x200?text=Clock+Preview)
+![Liquid Glass Clock](https://github.com/inchinet/Liquid-glass-clock/blob/master/LiquidClock.jpg)
 
 ## Features
 
