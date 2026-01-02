@@ -22,4 +22,23 @@ AlwaysOnTop=0
 7) final version to be built in a .exe (no need install) file for win11.
 8) use this readme.txt and prepare for deploy to my github....
 
+---
+Here is how to deploy to your GitHub:
+
+Go to GitHub: Log in to your account and create a new repository named liquid-glass-clock (or any name you prefer). Do not initialize it with a README, .gitignore, or license (since we already have them).
+Push your code: Copy the URL of your new repository (e.g., https://github.com/inchinet/liquid-glass-clock.git) and run these two commands in your terminal:
+git remote add origin https://github.com/inchinet/liquid-glass-clock.git
+git push -u origin master
+Checking your terminal, git is now ready and the initial commit is done. You just need to connect it to the cloud.
+
+- always use Z:\antigravity\venv\ if need python
+ a widget clock for windows11 in Z:\antigravity\widget\, requirements in readme.txt
+-issues:
+it disappear when i start in 2K monitor, please ensure it work default  for 2K and then 4K monitors
+suggest use light purple/light blue for digital part with am/pm for easier seen.
+ a widget clock for windows11 in Z:\antigravity\widget\ is ok
+deploy to my GitHub https://github.com/inchinet/liquid-glass-clock.git before, how to re-deploy?  i want also add the Z:\antigravity\widget\dist\LiquidGlassClock.exe
+i cannot git add LiquidGlassClock.exe - The following paths are ignored by one of your .gitignore files: dist
+
+
 
