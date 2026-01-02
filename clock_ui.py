@@ -42,6 +42,23 @@ class ClockWidget(QWidget):
         if 'WindowX' in settings and 'WindowY' in settings:
             x = int(settings['WindowX'])
             y = int(settings['WindowY'])
+            
+            # Validate if the position is on any connected screen
+            is_visible = False
+            widget_rect = QRect(x, y, 200, 200) # Assuming 200x200 size
+            
+            for screen in QApplication.screens():
+                # Check if the center of the widget is on the screen to ensure visibility
+                # Or at least a significant portion. Let's use center.
+                if screen.geometry().contains(QRect(x, y, 200, 200).center()):
+                    is_visible = True
+                    break
+            
+            if not is_visible:
+                # Reset to default if off-screen
+                screen_geometry = QApplication.primaryScreen().geometry()
+                x = screen_geometry.width() - 200 - 50
+                y = 50
         else:
             # Default to Top-Right
             screen_geometry = QApplication.primaryScreen().geometry()
@@ -142,7 +159,10 @@ class ClockWidget(QWidget):
         painter.drawRoundedRect(center.x() - rect_width//2, box_top_y, rect_width, rect_height, 15, 15)
 
         # Text
-        painter.setPen(QColor(255, 255, 255))
+        # Light Purple/Blue for better visibility.
+        # R=200, G=225, B=255 gives a nice light blue/purple tint.
+        text_color = QColor(200, 225, 255)
+        painter.setPen(text_color)
         current_time = datetime.datetime.now()
         
         # Date YYYY/MM/DD Weekday
