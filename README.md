@@ -10,6 +10,7 @@ A sleek, transparent "Liquid Glass" style clock widget for Windows 11.
 - **Draggable**: Move the widget anywhere on your desktop.
 - **Persistent Position**: Remembers where you left it on your next startup.
 - **Date & Lunar Date**: Displays current date, day of week, and accurate Chinese Lunar date.
+- **24 Solar Terms (廿四節氣)**: Dynamically calculates and displays the current solar term using astronomical calculations. Works for any year (past, present, or future) with dates accurate to Hong Kong timezone. No hardcoded dates - all calculations based on the sun's ecliptic longitude.
 - **Taskbar Integration**: Minimizes to taskbar for easy access.
 
 ## Requirements

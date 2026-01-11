@@ -1,3 +1,5 @@
 PyQt6
 lunarcalendar
+ephem
+pytz
 pyinstaller
