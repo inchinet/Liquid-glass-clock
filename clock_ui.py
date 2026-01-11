@@ -152,7 +152,7 @@ class ClockWidget(QWidget):
             painter.drawLine(0, -135, 0, -125) # Close to the edge (radius 140 approx)
         painter.restore()
         
-        # Date & Lunar Date Box
+        # Date, Lunar Date & Solar Term Box
         painter.setPen(Qt.PenStyle.NoPen)
         
         # Box Gradient
@@ -187,12 +187,14 @@ class ClockWidget(QWidget):
         painter.setFont(QFont('Segoe UI', 12, QFont.Weight.Bold))
         painter.drawText(QRect(center.x() - rect_width//2, box_top_y + 30, rect_width, 25), Qt.AlignmentFlag.AlignCenter, time_str)
 
-        # Lunar Date
+        # Lunar Date & Solar Term
         solar = Solar(current_time.year, current_time.month, current_time.day)
         lunar = Converter.Solar2Lunar(solar)
         lunar_str = self.get_lunar_string(lunar)
+        solar_term = self.get_solar_term(current_time)
+        lunar_solar_str = f"{lunar_str} {solar_term}"
         painter.setFont(QFont('Segoe UI', 10, QFont.Weight.Bold))
-        painter.drawText(QRect(center.x() - rect_width//2, box_top_y + 55, rect_width, 25), Qt.AlignmentFlag.AlignCenter, lunar_str)
+        painter.drawText(QRect(center.x() - rect_width//2, box_top_y + 55, rect_width, 25), Qt.AlignmentFlag.AlignCenter, lunar_solar_str)
 
         # Hands
         painter.save()
@@ -245,6 +247,169 @@ class ClockWidget(QWidget):
         month_str = CHINESE_MONTHS[lunar.month] if 1 <= lunar.month <= 12 else str(lunar.month)
         day_str = CHINESE_DAYS[lunar.day] if 1 <= lunar.day <= 30 else str(lunar.day)
         return f"{month_str}{day_str}"
+
+    def get_solar_term(self, date):
+        """
+        Calculate the current solar term (廿四節氣) for any given date.
+        Solar terms are based on the sun's ecliptic longitude, divided into 24 segments of 15° each.
+        Uses astronomical calculations for accuracy in Hong Kong timezone.
+        """
+        import ephem
+        import pytz
+        import math
+        
+        # Solar term names in order, starting from 小寒 at 285° ecliptic longitude
+        # Arranged by calendar year order (小寒 is usually around Jan 5-6)
+        solar_terms = [
+            "小寒", "大寒",  # Winter - 285°, 300°
+            "立春", "雨水", "驚蟄", "春分",  # Spring - 315°, 330°, 345°, 0°
+            "清明", "穀雨", "立夏", "小滿",  # Late Spring/Early Summer - 15°, 30°, 45°, 60°
+            "芒種", "夏至", "小暑", "大暑",  # Summer - 75°, 90°, 105°, 120°
+            "立秋", "處暑", "白露", "秋分",  # Autumn - 135°, 150°, 165°, 180°
+            "寒露", "霜降", "立冬", "小雪",  # Late Autumn/Early Winter - 195°, 210°, 225°, 240°
+            "大雪", "冬至"   # Winter - 255°, 270°
+        ]
+        
+        # Ecliptic longitudes for each solar term (in degrees)
+        # Arranged in calendar year order starting from 小寒
+        term_longitudes = [285, 300, 315, 330, 345, 0, 15, 30, 45, 60, 75, 90, 
+                          105, 120, 135, 150, 165, 180, 195, 210, 225, 240, 255, 270]
+        
+        # Hong Kong timezone
+        hk_tz = pytz.timezone('Asia/Hong_Kong')
+        
+        # Convert input date to Hong Kong timezone aware datetime at start of day
+        if isinstance(date, datetime.datetime):
+            if date.tzinfo is None:
+                current_date = hk_tz.localize(date.replace(hour=0, minute=0, second=0, microsecond=0))
+            else:
+                current_date = date.astimezone(hk_tz).replace(hour=0, minute=0, second=0, microsecond=0)
+        else:
+            current_date = hk_tz.localize(datetime.datetime.combine(date, datetime.time(0, 0)))
+        
+        year = current_date.year
+        
+        def get_sun_ecliptic_longitude(ephem_date):
+            """Get sun's ecliptic longitude from RA and Dec"""
+            sun = ephem.Sun()
+            sun.compute(ephem_date)
+            
+            # Convert RA/Dec to ecliptic longitude
+            obliquity = 23.4397 * math.pi / 180.0  # Earth's axial tilt in radians
+            
+            ra = float(sun.ra)
+            dec = float(sun.dec)
+            
+            # Ecliptic longitude formula
+            ecl_lon = math.atan2(
+                math.sin(ra) * math.cos(obliquity) + math.tan(dec) * math.sin(obliquity),
+                math.cos(ra)
+            )
+            
+            # Convert to degrees and normalize to 0-360
+            ecl_lon_deg = ecl_lon * 180.0 / math.pi
+            if ecl_lon_deg < 0:
+                ecl_lon_deg += 360
+            
+            return ecl_lon_deg
+        
+        # Function to find when sun reaches a specific ecliptic longitude
+        def find_solar_term_date(target_year, target_longitude):
+            """Find the HK date when sun reaches target ecliptic longitude"""
+            
+            month_start = {
+                285: (1, 1),   300: (1, 15),  315: (2, 1),   330: (2, 15),
+                345: (3, 1),   0: (3, 15),    15: (4, 1),    30: (4, 15),
+                45: (5, 1),    60: (5, 15),   75: (6, 1),    90: (6, 15),
+                105: (7, 1),   120: (7, 15),  135: (8, 1),   150: (8, 15),
+                165: (9, 1),   180: (9, 15),  195: (10, 1),  210: (10, 15),
+                225: (11, 1),  240: (11, 15), 255: (12, 1),  270: (12, 15),
+            }
+            
+            month, day = month_start[target_longitude]
+            
+            # Start from HK timezone date
+            search_date_hk = hk_tz.localize(datetime.datetime(target_year, month, day, 0, 0))
+            
+            # Search day by day in HK timezone
+            for day_offset in range(-10, 30):
+                # Current HK date at midnight
+                current_hk_date = search_date_hk + datetime.timedelta(days=day_offset)
+                next_hk_date = current_hk_date + datetime.timedelta(days=1)
+                
+                # Convert to UTC for ephem
+                current_utc = current_hk_date.astimezone(pytz.utc)
+                next_utc = next_hk_date.astimezone(pytz.utc)
+                
+                current_ephem = ephem.Date(current_utc.replace(tzinfo=None))
+                next_ephem = ephem.Date(next_utc.replace(tzinfo=None))
+                
+                lon = get_sun_ecliptic_longitude(current_ephem)
+                next_lon = get_sun_ecliptic_longitude(next_ephem)
+                
+                # Check if we crossed the target longitude
+                crossed = False
+                if target_longitude == 0:
+                    if lon > 355 and next_lon < 5:
+                        crossed = True
+                else:
+                    if lon < target_longitude <= next_lon:
+                        crossed = True
+                    elif lon > next_lon and (target_longitude > lon or target_longitude <= next_lon):
+                        crossed = True
+                
+                if crossed:
+                    # Check hour by hour IN HK TIMEZONE to find which HK day has the crossing
+                    for hour in range(24):
+                        hour_hk = current_hk_date + datetime.timedelta(hours=hour)
+                        hour_end_hk = hour_hk + datetime.timedelta(hours=1)
+                        
+                        hour_utc = hour_hk.astimezone(pytz.utc)
+                        hour_end_utc = hour_end_hk.astimezone(pytz.utc)
+                        
+                        hour_ephem = ephem.Date(hour_utc.replace(tzinfo=None))
+                        hour_end_ephem = ephem.Date(hour_end_utc.replace(tzinfo=None))
+                        
+                        lon_start = get_sun_ecliptic_longitude(hour_ephem)
+                        lon_end = get_sun_ecliptic_longitude(hour_end_ephem)
+                        
+                        hour_crossed = False
+                        if target_longitude == 0:
+                            if lon_start > 355 and lon_end < 5:
+                                hour_crossed = True
+                        else:
+                            if lon_start < target_longitude <= lon_end:
+                                hour_crossed = True
+                            elif lon_start > lon_end and (target_longitude > lon_start or target_longitude <= lon_end):
+                                hour_crossed = True
+                        
+                        if hour_crossed:
+                            # Return the HK date at midnight
+                            return current_hk_date.replace(hour=0, minute=0, second=0, microsecond=0)
+                    
+                    # If not found in current_hk_date hours, must be in next_hk_date
+                    return next_hk_date.replace(hour=0, minute=0, second=0, microsecond=0)
+            
+            # Fallback
+            return search_date_hk.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        # Calculate all 24 solar term dates for current year
+        term_dates = []
+        for longitude in term_longitudes:
+            term_date = find_solar_term_date(year, longitude)
+            term_dates.append(term_date)
+        
+        # Find if today is a solar term day
+        # Solar terms should only display on the day they occur, not for the entire period
+        current_term = ""  # Default to empty string
+        
+        for i in range(len(term_dates)):
+            term_date_normalized = term_dates[i].replace(hour=0, minute=0, second=0, microsecond=0)
+            if current_date == term_date_normalized:
+                current_term = solar_terms[i]
+                break
+        
+        return current_term
 
     def draw_buttons(self, painter):
         # Clean, modern buttons
