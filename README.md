@@ -2,7 +2,7 @@
 
 A sleek, transparent "Liquid Glass" style clock widget for Windows 11.
 
-![Liquid Glass Clock](https://github.com/inchinet/liquid-glass-clock/blob/master/LiquidClock.png)
+![Liquid Glass Clock](https://github.com/inchinet/liquid-glass-clock/blob/master/liquidclock.png)
 
 ## Features
 
@@ -65,3 +65,4 @@ To build the executable yourself using PyInstaller:
 build_exe.bat
 ```
 The output file will be in the `dist/` folder.
+
